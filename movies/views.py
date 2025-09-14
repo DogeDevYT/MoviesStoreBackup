@@ -1,6 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Movie, Review
+from django.db.models import Count
 
 
 # Create your views here.
@@ -19,10 +20,13 @@ def index(request):
 def show(request, id):
     movie = Movie.objects.get(id=id)
     reviews = Review.objects.filter(movie=movie)
+    reviews_sorted = Review.objects.annotate(
+        like_count=Count('likes')
+    ).order_by('-like_count')
     template_data = {}
     template_data['title'] = movie.name
     template_data['movie'] = movie
-    template_data['reviews'] = reviews
+    template_data['reviews'] = reviews_sorted
     return render(request, 'movies/show.html',
                   {'template_data': template_data})
 @login_required
@@ -59,6 +63,29 @@ def edit_review(request, id, review_id):
 def delete_review(request, id, review_id):
     review = get_object_or_404(Review, id=review_id, user=request.user)
     review.delete()
+    return redirect('movies.show', id=id)
+
+@login_required
+def like_review(request, id, review_id):
+    review = get_object_or_404(Review, id=review_id)
+    user = request.user
+
+    if user in review.likes.all():
+        # If the user has already liked the review, unlike it.
+        review.likes.remove(user)
+        liked = False
+    else:
+        # Otherwise, add the like.
+        review.likes.add(user)
+        liked = True
+
+    # Return a JSON response for AJAX calls
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({'liked': liked, 'total_likes': review.total_likes})
+
+    # --- FIX WAS HERE ---
+    # Fallback for non-AJAX requests. You need to redirect the user somewhere.
+    # Replace 'movie_detail' with the name of your movie detail view.
     return redirect('movies.show', id=id)
 
 

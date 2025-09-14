@@ -38,6 +38,10 @@
               {{ review.date }}
             </h6>
             <p class="card-text">{{ review.comment }}</p>
+            <p class="card-text">This review has {{ review.total_likes }} likes</p>
+            {% if user.is_authenticated and user != review.user %}
+            <a class="btn btn-primary" href="{% url 'movies.like_review' id=template_data.movie.id review_id=review.id%}">Like/Dislike</a>
+            {% endif %}
               {% if user.is_authenticated and user == review.user %}
             <a class="btn btn-primary" href="{% url 'movies.edit_review' id=template_data.movie.id review_id=review.id %}">Edit</a>
               <a class="btn btn-danger" href="{% url 'movies.delete_review' id=template_data.movie.id review_id=review.id %}">Delete</a>
