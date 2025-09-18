@@ -1,6 +1,10 @@
+from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
+
+from .models import SecurityQuestion
+
 
 class CustomErrorList(ErrorList):
     def __str__(self):
@@ -16,3 +20,9 @@ class CustomUserCreationForm(UserCreationForm):
             self.fields[fieldname].widget.attrs.update(
                 {'class': 'form-control'}
             )
+
+
+class SecurityQuestionForm(forms.ModelForm):
+    class Meta:
+        model = SecurityQuestion
+        fields = ['question', 'answer']
