@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div class="container my-5" style="max-width: 700px;">
+    <div class="text-center">
+        <h1 class="display-4 fw-bold">Movie Petitions</h1>
+        <p class="lead text-muted mb-5">Want to see a movie on our site? Add it to the list below!</p>
+    </div>
+
+    <!-- Petition Submission Form -->
+    <div class="card bg-light text-black p-4 rounded-4 shadow-lg mb-5">
+        <div class="card-body">
+            <h2 class="card-title h4 mb-4">Submit a New Petition</h2>
+            {% if user.is_authenticated %}
+            <form method="post" action="{% url 'petition_view' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.movie_title }}
+                </div>
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    Add My Petition
+                </button>
+            </form>
+            {% else %}
+            <p class="text-center text-muted">You must be <a href="{% url 'accounts.login' %}">logged in</a> to create a petition.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- List of Existing Petitions -->
+    <div>
+        <h2 class="h4 mb-4">Current Petitions</h2>
+        <div class="list-group">
+            {% for petition in petitions %}
+            <div class="list-group-item list-group-item-action bg-light text-black border-secondary mb-2 rounded-3 p-3">
+                <div class="d-flex w-100 justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1">{{ petition.movie_title }}</h5>
+                        <small class="text-muted">By: {{ petition.user.username }} on {{ petition.created_at|date:"F j, Y" }}</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-light text-dark rounded-pill me-3 fs-6">{{ petition.likes.count }} Likes</span>
+                        {% if user.is_authenticated and petition.user != user %}
+                        <form method="post" action="{% url 'like_petition' petition.id %}">
+                            {% csrf_token %}
+                            {% if user in petition.likes.all %}
+                                <button type="submit" class="btn btn-danger btn-sm">Unlike</button>
+                            {% else %}
+                                <button type="submit" class="btn btn-success btn-sm">Like</button>
+                            {% endif %}
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="list-group-item list-group-item-action bg-dark text-white border-secondary rounded-3 text-center">
+                <p class="mb-0 text-muted">No petitions have been submitted yet. Be the first!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
